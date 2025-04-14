@@ -130,8 +130,6 @@ orbits-simulation/
 ```
      
 
-```
-
 ### Key Files:
 
 - **orbits.py**: Contains the main `Orbits` and `OrbitAnimation` classes for simulation and visualization
