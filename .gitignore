@@ -30,6 +30,3 @@ env/
 venv/
 ENV/
 
-# Output files
-*.csv
-*.gif
