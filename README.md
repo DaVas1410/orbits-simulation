@@ -1,6 +1,30 @@
-# Orbits Simulation Module - README
+# Orbits Simulation Module
+
+![Python Version](https://img.shields.io/badge/python-3.7%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
 This README provides comprehensive documentation for the `orbits.py` module, which simulates and visualizes two-body orbital dynamics in both classical Newtonian and relativistic contexts.
+
+## Table of Contents
+- [Overview](#overview)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Module Structure](#module-structure)
+- [Project Structure](#project-structure)
+- [Usage Examples](#usage-examples)
+  - [Jupyter Notebook Example](#jupyter-notebook-example)
+  - [Command Line Example](#command-line-example)
+- [Orbits Class](#orbits-class)
+- [OrbitAnimation Class](#orbitanimation-class)
+- [Command Line Interface](#command-line-interface)
+- [Scientific Background](#scientific-background)
+- [Examples and Use Cases](#examples-and-use-cases)
+- [Output Files](#output-files)
+- [Troubleshooting](#troubleshooting)
+- [Advanced Usage](#advanced-usage)
+- [Limitations](#limitations)
+- [Future Development](#future-development)
+- [Contributing](#contributing)
 
 ## Overview
 
@@ -14,18 +38,63 @@ The Orbits module allows you to:
 ## Installation
 
 ### Prerequisites
-- Python 3.x
+- Python 3.7+
 - NumPy
 - SciPy
 - Matplotlib
-- Imagemagick (for GIF animations)
+- Pillow (for GIF animations)
+- Pandas (for data handling)
+
+### Using pip
 
 Install required packages:
 ```bash
-pip install numpy scipy matplotlib
+pip install numpy scipy matplotlib pillow pandas
 ```
 
-For animations, install Imagemagick according to your operating system.
+Alternatively, use the provided requirements file:
+```bash
+pip install -r requirements.txt
+```
+
+### Note on Animation Support
+
+The animation functionality uses Matplotlib's animation module with Pillow for GIF creation. No external dependencies like Imagemagick are required.
+
+## Quick Start
+
+Here's a simple example to get you started with a basic Earth orbit simulation:
+
+```python
+from orbits import Orbits
+
+# Create Earth orbit simulation
+earth = Orbits("earth_orbit")
+
+# Initialize orbit parameters (Sun-Earth system)
+earth.initialize_orbit(
+    M=1.989e30,  # Sun's mass (kg)
+    a=1.496e11,  # 1 AU in meters
+    e=0.0167,    # Earth's eccentricity
+    N=1000       # Number of steps
+)
+
+# Calculate orbital period
+orbital_period = 2 * np.pi * np.sqrt((1.496e11)**3 / (6.67430e-11 * 1.989e30))
+
+# Run simulation and get trajectory
+trajectory = earth.run_simulation(
+    earth.classical_slope,
+    "scipy",
+    (0, orbital_period),
+    np.linspace(0, orbital_period, 1000)
+)
+
+# Create animation
+from orbits import OrbitAnimation
+animation = OrbitAnimation("output/earth_orbit_history.csv", output_gif="earth_orbit.gif")
+animation.create_animation()
+```
 
 ## Module Structure
 
@@ -33,139 +102,50 @@ The module contains two main classes:
 1. `Orbits`: Handles orbit initialization, integration, and simulation
 2. `OrbitAnimation`: Creates animations from simulation data
 
-## Usage Examples
+## Project Structure
 
-### Jupyter Notebook Example
+The repository is organized as follows:
 
-```python
-# Orbits Simulation Module - Example Notebook
-
-import os
-import numpy as np
-import matplotlib.pyplot as plt
-from orbits import Orbits, OrbitAnimation
-
-# 1. Create an orbit instance with a descriptive name
-mercury_orbit = Orbits("mercury_perihelion")
-
-# 2. Initialize the orbit parameters
-#    - Sun's mass in kg
-#    - Mercury's semi-major axis in meters (0.387 AU)
-#    - Mercury's eccentricity (0.206)
-#    - Number of simulation steps
-mercury_orbit.initialize_orbit(
-    M=1.989e30,  # Sun's mass in kg
-    a=0.387 * 1.496e11,  # Mercury's semi-major axis (0.387 AU converted to meters)
-    e=0.206,  # Mercury's eccentricity
-    N=1000,  # Number of steps
-    save=True  # Save the initialization plot
-)
-
-# 3. Define the simulation time span
-orbital_period = 2 * np.pi * np.sqrt((0.387 * 1.496e11)**3 / (6.67430e-11 * 1.989e30))
-t_span = (0, orbital_period)
-t_eval = np.linspace(0, orbital_period, 1000)
-
-# 4. Run simulation with classical mechanics
-classical_trajectory = mercury_orbit.run_simulation(
-    mercury_orbit.classical_slope,
-    "scipy",  # Using SciPy's RK45 integrator
-    t_span,
-    t_eval,
-    output_folder="mercury_classical"
-)
-
-# 5. Run simulation with relativistic corrections
-relativistic_trajectory = mercury_orbit.run_simulation(
-    mercury_orbit.relativistic_slope,
-    "scipy",  # Using SciPy's RK45 integrator
-    t_span,
-    t_eval,
-    output_folder="mercury_relativistic"
-)
-
-# 6. Compare the trajectories
-plt.figure(figsize=(10, 8))
-plt.plot(0, 0, 'ko', markersize=10, label="Sun")
-plt.plot(classical_trajectory[:, 0], classical_trajectory[:, 1], 'b-', label="Classical")
-plt.plot(relativistic_trajectory[:, 0], relativistic_trajectory[:, 1], 'r-', label="Relativistic")
-plt.grid(True)
-plt.xlabel("x (AU)")
-plt.ylabel("y (AU)")
-plt.title("Mercury's Orbit: Classical vs Relativistic")
-plt.legend()
-plt.axis('equal')
-plt.savefig("mercury_comparison.png")
-plt.show()
-
-# 7. Create an animation from the relativistic simulation
-animation = OrbitAnimation("mercury_relativistic/mercury_perihelion_orbit_history.csv", 
-                          output_gif="mercury_orbit.gif")
-animation.create_animation()
-
-# 8. Example: Black hole orbit
-#    This demonstrates a more extreme case where relativistic effects are significant
-black_hole_orbit = Orbits("black_hole_test")
-
-# Initialize orbit around a 4.3 million solar mass black hole (like Sgr A*)
-black_hole_orbit.initialize_orbit(
-    M=4.3e6 * 1.989e30,  # 4.3 million solar masses in kg
-    a=1.0 * 1.496e11,    # 1 AU semi-major axis
-    e=0.8,               # High eccentricity to see strong relativistic effects
-    N=2000,              # More steps for better resolution
-    save=True
-)
-
-# Calculate orbital period and run for longer to see precession
-bh_orbital_period = 2 * np.pi * np.sqrt((1.0 * 1.496e11)**3 / (6.67430e-11 * 4.3e6 * 1.989e30))
-bh_t_span = (0, 5 * bh_orbital_period)  # Simulate for 5 orbital periods
-bh_t_eval = np.linspace(0, 5 * bh_orbital_period, 2000)
-
-# Run both classical and relativistic simulations
-bh_classical = black_hole_orbit.run_simulation(
-    black_hole_orbit.classical_slope,
-    "scipy",
-    bh_t_span,
-    bh_t_eval,
-    output_folder="bh_classical"
-)
-
-bh_relativistic = black_hole_orbit.run_simulation(
-    black_hole_orbit.relativistic_slope,
-    "scipy",
-    bh_t_span,
-    bh_t_eval,
-    output_folder="bh_relativistic"
-)
-
-# Visualize the relativistic precession
-plt.figure(figsize=(12, 10))
-plt.plot(0, 0, 'ko', markersize=12, label="Black Hole")
-
-# Plot the Schwarzschild radius
-G = 6.67430e-11
-c = 3e8
-M = 4.3e6 * 1.989e30
-schwarzschild_radius = 2 * G * M / c**2 / 1.496e11  # Convert to AU
-circle = plt.Circle((0, 0), schwarzschild_radius, color='black', fill=True, alpha=0.3)
-plt.gca().add_artist(circle)
-
-plt.plot(bh_classical[:, 0], bh_classical[:, 1], 'b-', label="Classical", alpha=0.7)
-plt.plot(bh_relativistic[:, 0], bh_relativistic[:, 1], 'r-', label="Relativistic", alpha=0.7)
-plt.grid(True)
-plt.xlabel("x (AU)")
-plt.ylabel("y (AU)")
-plt.title("Orbit Around a Supermassive Black Hole: Classical vs Relativistic")
-plt.legend()
-plt.axis('equal')
-plt.savefig("black_hole_precession.png")
-plt.show()
-
-# Create an animation of the relativistic black hole orbit
-bh_animation = OrbitAnimation("bh_relativistic/black_hole_test_orbit_history.csv", 
-                             output_gif="black_hole_orbit.gif")
-bh_animation.create_animation()
 ```
+orbits-simulation/
+├── README.md               # This documentation file
+├── requirements.txt        # Project dependencies
+├── setup.py                # Installation configuration
+├── orbits/                 # Main package directory
+│   ├── orbits.py           # Core module with simulation logic
+│   └── __init__.py         # Package initialization
+├── tests/                  # Unit tests for the module
+│   ├── test_orbits.py      # Test cases for Orbits and OrbitAnimation classes
+│   └── __init__.py         # Test package initialization
+├── Examples/               # Example usage and demonstrations
+│   ├── Analysis/           # Computational Physics analysis examples
+│   │   ├── output/         # Output files from analysis
+│   │   └── analysis.ipynb  # Jupyter Notebook for analysis
+│   ├── bash_examples/      # Bash scripts for running simulations
+│   │   ├── earth_orbit.sh  # Example script for Earth orbit simulation
+│   │   └── README.md       # Documentation for bash examples
+│   ├── notebook_examples/  # Jupyter Notebook examples
+│   │   ├── output/         # Output files from notebooks
+│   │   └── notebook_example.ipynb  # Example notebook for simulations
+```
+     
+
+```
+
+### Key Files:
+
+- **orbits.py**: Contains the main `Orbits` and `OrbitAnimation` classes for simulation and visualization
+- **setup.py**: Defines package metadata and dependencies for pip installation
+- **requirements.txt**: Lists all project dependencies with version specifications
+
+To install the package for development:
+```bash
+git clone https://github.com/davas1410/orbits-simulation.git
+cd orbits-simulation
+pip install -e .
+```
+
+## Usage Examples
 
 ### Command Line Example
 
@@ -184,6 +164,7 @@ python orbits.py --name "earth_trapz" --mass 1.989e30 --axis 1.0 --eccentricity 
 python orbits.py --name "earth_rk3" --mass 1.989e30 --axis 1.0 --eccentricity 0.0167 --steps 1000 --method rk3 --save
 python orbits.py --name "earth_scipy" --mass 1.989e30 --axis 1.0 --eccentricity 0.0167 --steps 1000 --method scipy --save
 ```
+
 
 ### Orbits Class
 
@@ -354,6 +335,16 @@ Potential enhancements:
 - Full General Relativistic treatment using geodesic equations
 - Improved visualization options
 
-## License
+## Contributing
 
-This module is provided for educational and research purposes.
+Contributions to this project are welcome! Here's how you can contribute:
+
+1. **Report bugs and issues:** Open an issue in the repository
+2. **Suggest new features:** Create a feature request
+3. **Submit pull requests:** Implement new features or fix bugs
+
+When contributing code, please ensure:
+- Code follows PEP 8 style guide
+- New features include appropriate tests
+- Documentation is updated to reflect changes
+

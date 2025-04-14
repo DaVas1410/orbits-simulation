@@ -1,3 +1,14 @@
+# Core numerical computing library for array operations
 numpy>=1.19.0
+
+# Scientific computing library for differential equation solving
 scipy>=1.5.0
+
+# Plotting and visualization library
 matplotlib>=3.3.0
+
+# Python Imaging Library fork - used for GIF animations
+pillow>=8.0.0
+
+# Data manipulation library - used for loading orbit data in the OrbitAnimation class
+pandas>=1.1.0

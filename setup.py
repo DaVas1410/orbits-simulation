@@ -2,12 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name="orbits-simulation",
-    version="0.1.0",
+    version="0.2.0",
     packages=find_packages(),
     install_requires=[
-        "numpy",
-        "scipy",
-        "matplotlib",
+        "numpy>=1.19.0",
+        "scipy>=1.5.0",
+        "matplotlib>=3.3.0",
+        "pandas>=1.1.0",  # Required for OrbitAnimation data loading
+        "pillow>=8.0.0",  # Required for animation GIF creation
     ],
     author="Juanda Vasconez",
     author_email="juan.vasconez@yachaytech.edu.ec",
@@ -23,4 +25,9 @@ setup(
         "Topic :: Scientific/Engineering :: Visualization",
     ],
     python_requires=">=3.8",
+    entry_points={
+        "console_scripts": [
+            "orbits=orbits.orbits:main",
+        ],
+    },
 )
