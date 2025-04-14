@@ -1,7 +1,7 @@
 # Orbits Simulation Module
 
-![Python Version](https://img.shields.io/badge/python-3.7%2B-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)
+
 
 This README provides comprehensive documentation for the `orbits.py` module, which simulates and visualizes two-body orbital dynamics in both classical Newtonian and relativistic contexts.
 
